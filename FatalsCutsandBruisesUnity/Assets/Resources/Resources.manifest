@@ -1,0 +1,10 @@
+ManifestFileVersion: 0
+CRC: 651731367
+AssetBundleManifest:
+  AssetBundleInfos:
+    Info_0:
+      Name: infected
+      Dependencies: {}
+    Info_1:
+      Name: cut
+      Dependencies: {}
