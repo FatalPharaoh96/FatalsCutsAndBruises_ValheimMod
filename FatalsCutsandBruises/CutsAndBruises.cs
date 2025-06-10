@@ -54,21 +54,16 @@ namespace FatalsCutsAndBruises
             PrefabManager.OnVanillaPrefabsAvailable += RegisterStatusEffects;
             PrefabManager.OnVanillaPrefabsAvailable += CreateAntibioticItem;
 
-
-            ItemManager.OnItemsRegistered += LoadRecipes;
-
-
-
             AddLocalizations();
         }
 
         private void CreateConfig()
         {
-            CutChance = Config.Bind("General", "Cut Chance", 0.99f);
-            CutDuration = Config.Bind("General", "Cut Duration", 200.0f);
-            InfectionChance = Config.Bind("General", "Infection Chance", 0.99f);
+            CutChance = Config.Bind("General", "Cut Chance", 0.1f);
+            CutDuration = Config.Bind("General", "Cut Duration", 30.0f);
+            InfectionChance = Config.Bind("General", "Infection Chance", 0.01f);
             InfectionDamagePerTick = Config.Bind("General", "Infection Damage", 2f);
-            InfectionTickInterval = Config.Bind("General", "Infection Tick Interval", 2f);
+            InfectionTickInterval = Config.Bind("General", "Infection Tick Interval", 4f);
             InfectionDuration = Config.Bind("General", "Infection Duration", 2000.0f);
         }
 
@@ -158,92 +153,30 @@ namespace FatalsCutsAndBruises
 
         }
 
-        private void LoadRecipes()
-        {
-            ItemManager.OnItemsRegistered -= LoadRecipes;
-
-
-            var prefab = PrefabManager.Instance.GetPrefab("antibioticPrefab");
-            if (prefab == null)
-            {
-                Jotunn.Logger.LogError("antibioticPrefab not found in PrefabManager. Recipe not created.");
-                return;
-            }
-
-            var itemDrop = prefab.GetComponent<ItemDrop>();
-            if (itemDrop == null)
-            {
-                Jotunn.Logger.LogError("ItemDrop component missing on antibioticPrefab. Recipe not created.");
-                return;
-            }
-
-            if (itemDrop.m_itemData == null)
-            {
-                Jotunn.Logger.LogError("ItemDrop.m_itemData is null on antibioticPrefab. Recipe not created.");
-                return;
-            }
-
-            if (itemDrop.m_itemData.m_shared == null)
-            {
-                Jotunn.Logger.LogError("ItemDrop.m_itemData.m_shared is null on antibioticPrefab. Recipe not created.");
-                return;
-            }
-
-            Jotunn.Logger.LogInfo("Creating antibiotic recipe...");
-
-            Recipe recipe = ScriptableObject.CreateInstance<Recipe>();
-            recipe.name = "AntibioticRecipe";
-            recipe.m_item = itemDrop;
-            recipe.m_craftingStation = PrefabManager.Instance.GetPrefab("Workbench").GetComponent<CraftingStation>();
-            recipe.m_resources = new[]
-            {
-                new Piece.Requirement
-                {
-                    m_resItem = PrefabManager.Instance.GetPrefab("Mushroom").GetComponent<ItemDrop>(),
-                    m_amount = 1
-                },
-                new Piece.Requirement
-                {
-                    m_resItem = PrefabManager.Instance.GetPrefab("Dandelion").GetComponent<ItemDrop>(),
-                    m_amount = 2
-                }
-            };
-            Jotunn.Logger.LogInfo("adding recipe");
-            var customRecipe = new CustomRecipe(recipe, false, false);
-            ItemManager.Instance.AddRecipe(customRecipe);
-
-            // Log success
-            Jotunn.Logger.LogInfo("Antibiotic recipe successfully created and registered.");
-        }
-
         private void CreateAntibioticItem()
         {
-            ItemConfig antibioticConfig = new ItemConfig();
-            antibioticConfig.Name = "$item_antibiotic";
-            antibioticConfig.Description = "$item_antibiotic_description";
-            antibioticConfig.CraftingStation = "Workbench";
-            antibioticConfig.Requirements = new RequirementConfig[]
+            ItemConfig antibioticConfig = new ItemConfig
             {
-                new RequirementConfig("Honey", 1),
-                new RequirementConfig("Dandelion", 2)
+                Name = "$item_antibiotic",
+                Description = "$item_antibiotic_description",
+                CraftingStation = "Workbench",
+                Icon = AntibioticSprite,
+                Requirements = new RequirementConfig[]
+                {
+            new RequirementConfig("Mushroom", 1),
+            new RequirementConfig("Dandelion", 2)
+                }
             };
 
-
-
-            antibioticConfig.Icon = AntibioticSprite;
-
-
             CustomItem antibioticItem = new CustomItem("antibioticPrefab", "Mushroom", antibioticConfig);
-          
+
             antibioticItem.ItemDrop.m_itemData.m_shared.m_consumeStatusEffect = ScriptableObject.CreateInstance<RemoveInfectionEffect>();
-            
 
             ItemManager.Instance.AddItem(antibioticItem);
 
-
-
             PrefabManager.OnVanillaPrefabsAvailable -= CreateAntibioticItem;
         }
+
 
 
         // Custom status effect to remove infection
