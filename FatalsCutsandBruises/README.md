@@ -1,6 +1,6 @@
 ﻿# Fatals Cuts and Bruises
 
-This mod adds several status effects that can be recieved by playera when takng damage.
+This mod adds several status effects that can be recieved by players when taking damage.
 A new consumable item is added to heal Infections.
 
 Dependencies:
@@ -23,7 +23,7 @@ Effects:
 - Infections: Affects the player with an infection, this effect does damage over time.
 
 Items:
-- antibiotic: A consumable item that can be used to heal and prevent infections. It can be crafted at the workbench using 1 mushroom and 2 dandelion.
+- Antibiotic: A consumable item that can be used to heal and prevent infections. It can be crafted at the workbench using 1 mushroom and 2 dandelion.
 
 ## Changelog
 
