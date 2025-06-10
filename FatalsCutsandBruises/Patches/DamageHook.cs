@@ -20,6 +20,12 @@ namespace FatalsCutsAndBruises.Patches
                 seMan.AddStatusEffect(CutsAndBruises.CutEffectPrefab);
                 Jotunn.Logger.LogInfo("Cut status effect applied");
             }
+            if (!seMan.HaveStatusEffect(CutsAndBruises.BruiseEffectHash) && UnityEngine.Random.value < CutsAndBruises.BruiseChance.Value)
+            {
+                seMan.AddStatusEffect(CutsAndBruises.BruiseEffectPrefab);
+                Jotunn.Logger.LogInfo("Bruise status effect applied");
+            }
+
         }
     }
 }

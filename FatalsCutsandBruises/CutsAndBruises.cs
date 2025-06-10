@@ -8,6 +8,7 @@ using Jotunn.Configs;
 using Jotunn.Entities;
 using Jotunn.Managers;
 using Jotunn.Utils;
+using StatusEffectManager;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,6 +25,10 @@ namespace FatalsCutsAndBruises
 
         public static ConfigEntry<float> CutChance;
         public static ConfigEntry<float> CutDuration;
+        public static ConfigEntry<float> BruiseChance;
+        public static ConfigEntry<float> BruiseDuration;
+        public static ConfigEntry<float> BruiseTickInterval;
+        public static ConfigEntry<float> BruiseStaminaReduction;
         public static ConfigEntry<float> InfectionChance;
         public static ConfigEntry<float> InfectionDamagePerTick;
         public static ConfigEntry<float> InfectionTickInterval;
@@ -31,12 +36,15 @@ namespace FatalsCutsAndBruises
 
         public static Sprite CutSprite;
         public static Sprite InfectedSprite;
+        public static Sprite BruiseSprite;
         public static Sprite AntibioticSprite;
 
         public static StatusEffect CutEffectPrefab;
+        public static StatusEffect BruiseEffectPrefab;
         public static StatusEffect InfectionEffectPrefab;
 
         public static int CutEffectHash;
+        public static int BruiseEffectHash;
         public static int InfectionEffectHash;
 
         private Harmony harmony;
@@ -61,6 +69,10 @@ namespace FatalsCutsAndBruises
         {
             CutChance = Config.Bind("General", "Cut Chance", 0.1f);
             CutDuration = Config.Bind("General", "Cut Duration", 30.0f);
+            BruiseChance = Config.Bind("General", "Bruise Chance", 0.2f);
+            BruiseDuration = Config.Bind("General", "Bruise Duration", 45.0f);
+            BruiseTickInterval = Config.Bind("General", "Bruise Tick Interval", 2f);
+            BruiseStaminaReduction = Config.Bind("General", "Bruise Stamina Reduction", 10f);
             InfectionChance = Config.Bind("General", "Infection Chance", 0.01f);
             InfectionDamagePerTick = Config.Bind("General", "Infection Damage", 2f);
             InfectionTickInterval = Config.Bind("General", "Infection Tick Interval", 4f);
@@ -74,6 +86,7 @@ namespace FatalsCutsAndBruises
             {
                 { "status_cut", "Cut" },
                 { "status_infected", "Infected" },
+                { "status_bruise", "Bruise" },
                 { "item_antibiotic", "Antibiotic" },
                 { "item_antibiotic_description", "A dose of antibiotics. Removes infection." }
             });
@@ -96,6 +109,16 @@ namespace FatalsCutsAndBruises
 
             CutsAndBruises.CutEffectPrefab = cutEffect;
             CutsAndBruises.CutEffectHash = cutEffect.name.GetStableHashCode();
+
+            var bruiseEffect = ScriptableObject.CreateInstance<BruiseEffect>();
+            bruiseEffect.name = "Bruise";
+            bruiseEffect.m_name = "$status_bruise";
+            bruiseEffect.m_icon = BruiseSprite;
+            bruiseEffect.m_tooltip = "You have a bruise that reduces your stamina.";
+            bruiseEffect.m_ttl = BruiseDuration.Value;
+
+            CutsAndBruises.BruiseEffectPrefab = bruiseEffect;
+            CutsAndBruises.BruiseEffectHash = bruiseEffect.name.GetStableHashCode();
 
             var infectionEffect = ScriptableObject.CreateInstance<InfectionEffect>();
             infectionEffect.name = "Infected";
@@ -151,6 +174,14 @@ namespace FatalsCutsAndBruises
             AntibioticSprite = antibioticBundle.LoadAsset<Sprite>("antibiotic");
             Jotunn.Logger.LogInfo($"AntibioticSprite loaded: {AntibioticSprite != null}");
 
+            var bruiseBundle = AssetUtils.LoadAssetBundleFromResources("bruise", typeof(CutsAndBruises).Assembly);
+            if (bruiseBundle == null)
+            {
+                Jotunn.Logger.LogError("Failed to load Bruise asset bundle");
+                return;
+            }
+            BruiseSprite = bruiseBundle.LoadAsset<Sprite>("bruise");
+            Jotunn.Logger.LogInfo($"BruiseSprite loaded: {BruiseSprite != null}");
         }
 
         private void CreateAntibioticItem()

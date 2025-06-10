@@ -60,6 +60,9 @@
 		<EmbeddedResource Include="Assets\Resources\antibiotic">
 			<LogicalName>FatalsCutsAndBruises.antibiotic</LogicalName>
 		</EmbeddedResource>
+		<EmbeddedResource Include="Assets\Resources\bruise">
+			<LogicalName>FatalsCutsAndBruises.bruise</LogicalName>
+		</EmbeddedResource>
 		<EmbeddedResource Include="Assets\Resources\antibioticPrefab">
 			<LogicalName>FatalsCutsAndBruises.antibioticPrefab</LogicalName>
 		</EmbeddedResource>
