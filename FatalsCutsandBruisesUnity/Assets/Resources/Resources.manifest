@@ -1,5 +1,5 @@
 ManifestFileVersion: 0
-CRC: 651731367
+CRC: 1063142358
 AssetBundleManifest:
   AssetBundleInfos:
     Info_0:
@@ -8,3 +8,10 @@ AssetBundleManifest:
     Info_1:
       Name: cut
       Dependencies: {}
+    Info_2:
+      Name: antibiotic
+      Dependencies: {}
+    Info_3:
+      Name: antibioticprefab
+      Dependencies:
+        Dependency_0: antibiotic

@@ -1,9 +1,11 @@
-﻿using UnityEngine;
+﻿using FatalsCutsAndBruises;
 using Jotunn;
-using FatalsCutsAndBruises;
+using System.Linq;
+using UnityEngine;
 
 namespace FatalsCutsAndBruises.Effects
 {
+
     public class InfectionEffect : SE_Stats
     {
         private float damageTimer = 0f;
@@ -29,6 +31,7 @@ namespace FatalsCutsAndBruises.Effects
                 hit.m_damage.m_damage = CutsAndBruises.InfectionDamagePerTick.Value;
                 m_character.Damage(hit);
             }
+
         }
     }
 }

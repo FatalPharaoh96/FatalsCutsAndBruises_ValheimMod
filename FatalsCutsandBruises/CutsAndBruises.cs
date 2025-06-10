@@ -4,6 +4,7 @@ using BepInEx.Configuration;
 using FatalsCutsAndBruises.Effects;
 using HarmonyLib;
 using Jotunn;
+using Jotunn.Configs;
 using Jotunn.Entities;
 using Jotunn.Managers;
 using Jotunn.Utils;
@@ -30,6 +31,7 @@ namespace FatalsCutsAndBruises
 
         public static Sprite CutSprite;
         public static Sprite InfectedSprite;
+        public static Sprite AntibioticSprite;
 
         public static StatusEffect CutEffectPrefab;
         public static StatusEffect InfectionEffectPrefab;
@@ -49,8 +51,13 @@ namespace FatalsCutsAndBruises
             CreateConfig();
             LoadIcons();
 
-            // Register status effects only after ObjectDB is ready
             PrefabManager.OnVanillaPrefabsAvailable += RegisterStatusEffects;
+            PrefabManager.OnVanillaPrefabsAvailable += CreateAntibioticItem;
+
+
+            ItemManager.OnItemsRegistered += LoadRecipes;
+
+
 
             AddLocalizations();
         }
@@ -71,7 +78,9 @@ namespace FatalsCutsAndBruises
             localization.AddTranslation("English", new Dictionary<string, string>
             {
                 { "status_cut", "Cut" },
-                { "status_infected", "Infected" }
+                { "status_infected", "Infected" },
+                { "item_antibiotic", "Antibiotic" },
+                { "item_antibiotic_description", "A dose of antibiotics. Removes infection." }
             });
 
             LocalizationManager.Instance.AddLocalization(localization);
@@ -125,7 +134,7 @@ namespace FatalsCutsAndBruises
                 Jotunn.Logger.LogError("Failed to load Cut asset bundle");
                 return;
             }
-            
+
             CutSprite = cutBundle.LoadAsset<Sprite>("cut");
             Jotunn.Logger.LogInfo($"CutSprite loaded: {CutSprite != null}");
 
@@ -137,8 +146,118 @@ namespace FatalsCutsAndBruises
             }
             InfectedSprite = infectedBundle.LoadAsset<Sprite>("infected");
             Jotunn.Logger.LogInfo($"InfectedSprite loaded: {InfectedSprite != null}");
+
+            var antibioticBundle = AssetUtils.LoadAssetBundleFromResources("antibiotic", typeof(CutsAndBruises).Assembly);
+            if (antibioticBundle == null)
+            {
+                Jotunn.Logger.LogError("Failed to load Antibiotic asset bundle");
+                return;
+            }
+            AntibioticSprite = antibioticBundle.LoadAsset<Sprite>("antibiotic");
+            Jotunn.Logger.LogInfo($"AntibioticSprite loaded: {AntibioticSprite != null}");
+
+        }
+
+        private void LoadRecipes()
+        {
+            ItemManager.OnItemsRegistered -= LoadRecipes;
+
+
+            var prefab = PrefabManager.Instance.GetPrefab("antibioticPrefab");
+            if (prefab == null)
+            {
+                Jotunn.Logger.LogError("antibioticPrefab not found in PrefabManager. Recipe not created.");
+                return;
+            }
+
+            var itemDrop = prefab.GetComponent<ItemDrop>();
+            if (itemDrop == null)
+            {
+                Jotunn.Logger.LogError("ItemDrop component missing on antibioticPrefab. Recipe not created.");
+                return;
+            }
+
+            if (itemDrop.m_itemData == null)
+            {
+                Jotunn.Logger.LogError("ItemDrop.m_itemData is null on antibioticPrefab. Recipe not created.");
+                return;
+            }
+
+            if (itemDrop.m_itemData.m_shared == null)
+            {
+                Jotunn.Logger.LogError("ItemDrop.m_itemData.m_shared is null on antibioticPrefab. Recipe not created.");
+                return;
+            }
+
+            Jotunn.Logger.LogInfo("Creating antibiotic recipe...");
+
+            Recipe recipe = ScriptableObject.CreateInstance<Recipe>();
+            recipe.name = "AntibioticRecipe";
+            recipe.m_item = itemDrop;
+            recipe.m_craftingStation = PrefabManager.Instance.GetPrefab("Workbench").GetComponent<CraftingStation>();
+            recipe.m_resources = new[]
+            {
+                new Piece.Requirement
+                {
+                    m_resItem = PrefabManager.Instance.GetPrefab("Mushroom").GetComponent<ItemDrop>(),
+                    m_amount = 1
+                },
+                new Piece.Requirement
+                {
+                    m_resItem = PrefabManager.Instance.GetPrefab("Dandelion").GetComponent<ItemDrop>(),
+                    m_amount = 2
+                }
+            };
+            Jotunn.Logger.LogInfo("adding recipe");
+            var customRecipe = new CustomRecipe(recipe, false, false);
+            ItemManager.Instance.AddRecipe(customRecipe);
+
+            // Log success
+            Jotunn.Logger.LogInfo("Antibiotic recipe successfully created and registered.");
+        }
+
+        private void CreateAntibioticItem()
+        {
+            ItemConfig antibioticConfig = new ItemConfig();
+            antibioticConfig.Name = "$item_antibiotic";
+            antibioticConfig.Description = "$item_antibiotic_description";
+            antibioticConfig.CraftingStation = "Workbench";
+            antibioticConfig.Requirements = new RequirementConfig[]
+            {
+                new RequirementConfig("Honey", 1),
+                new RequirementConfig("Dandelion", 2)
+            };
+
+
+
+            antibioticConfig.Icon = AntibioticSprite;
+
+
+            CustomItem antibioticItem = new CustomItem("antibioticPrefab", "Mushroom", antibioticConfig);
+          
+            antibioticItem.ItemDrop.m_itemData.m_shared.m_consumeStatusEffect = ScriptableObject.CreateInstance<RemoveInfectionEffect>();
+            
+
+            ItemManager.Instance.AddItem(antibioticItem);
+
+
+
+            PrefabManager.OnVanillaPrefabsAvailable -= CreateAntibioticItem;
         }
 
 
+        // Custom status effect to remove infection
+        public class RemoveInfectionEffect : StatusEffect
+        {
+            public override void Setup(Character character)
+            {
+                base.Setup(character);
+                if (m_character != null)
+                {
+                    // Remove the infection effect if present
+                    m_character.m_seman.RemoveStatusEffect(CutsAndBruises.InfectionEffectHash, true);
+                }
+            }
+        }
     }
 }

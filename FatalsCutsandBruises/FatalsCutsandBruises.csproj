@@ -57,7 +57,13 @@
 		<EmbeddedResource Include="Assets\Resources\infected">
 			<LogicalName>FatalsCutsAndBruises.infected</LogicalName>
 		</EmbeddedResource>
-	</ItemGroup>
+		<EmbeddedResource Include="Assets\Resources\antibiotic">
+			<LogicalName>FatalsCutsAndBruises.antibiotic</LogicalName>
+		</EmbeddedResource>
+		<EmbeddedResource Include="Assets\Resources\antibioticPrefab">
+			<LogicalName>FatalsCutsAndBruises.antibioticPrefab</LogicalName>
+		</EmbeddedResource>
+		</ItemGroup>
 
 	<ItemGroup>
 	  <Folder Include="Managers\" />
